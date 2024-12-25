@@ -10,6 +10,8 @@ class Main:
     def demarrer(self):
         self.grille.placer_au_hasard('A', 20)  # Placer 20 arbres
         self.grille.placer_au_hasard('F', 5)   # Placer 5 feux
+        self.grille.placer_au_hasard('S', 10)  # Place 10 survivants
+        self.grille.placer_au_hasard('B', 1)   # Place 1 base
         print("Grille initiale:")
         self.grille.afficher()
 
