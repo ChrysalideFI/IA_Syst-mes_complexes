@@ -5,9 +5,11 @@ from grille import Grille
 class Main:
     def __init__(self):
         self.taille = 10  # Taille de la grille
-        self.grille = Grille(self.taille)
+        self.prob = float(input('Entrez la probabilité de pousse dun arbre (entre 0 et 1) : '))
+        self.grille = Grille(self.taille, self.prob)
 
     def demarrer(self):
+
         self.grille.placer_au_hasard('A', 20)  # Placer 20 arbres
         self.grille.placer_au_hasard('F', 5)   # Placer 5 feux
         self.grille.placer_au_hasard('S', 10)  # Place 10 survivants
