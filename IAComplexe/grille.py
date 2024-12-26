@@ -43,15 +43,16 @@ class Grille:
                     # Si un arbre a un voisin en feu, il prend feu
                     if any(self.grille[x][y] == 'F' for x, y in self.voisins(i, j)):
                         nouvelle_grille[i][j] = 'F'
-                        print("Arbre : ", j, ",", i, " prend feu")
+                        print("Arbre : ", j+1, ",", i+1, " prend feu")
                 elif self.grille[i][j] == 'F':
                     # Un feu reste un feu
                     nouvelle_grille[i][j] = 'F'
               
                 elif self.grille[i][j] == '*':
+                    #Proba qu'une 
                     if random.random() < self.prob:
                         nouvelle_grille[i][j] = "A"
-                        print("Nouvelle arbre à poussé à : ", j, ",", i)
+                        print("Nouvelle arbre à poussé à : ", j+1, ",", i+1)
         
         
         self.grille = nouvelle_grille
