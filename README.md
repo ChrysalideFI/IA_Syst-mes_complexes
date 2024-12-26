@@ -21,3 +21,7 @@ grille AC - case feu
 	
 	
 	Grille --> Modéliser le feu/arbre --> QG + 1 seul robot --> QG + pleins de robots 
+
+	Robot :
+ 		- Explorateur : explore la grille pour trouver des feux, il détecte un feu ou un survivant quand il est 1 case à coté et il envoie la coordoner à la base qui l'envoie ensuite à un robot pompier libre
+   		- Pompier : s'active quand il reçoit une coordonner d'un feu ou d'un survivant pour régler le problème
