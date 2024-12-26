@@ -47,5 +47,14 @@ class Grille:
                     # Un feu reste un feu
                     nouvelle_grille[i][j] = 'F'
                 # Sinon, les arbres et cellules vides restent inchangés
-
+        
+        self.arbres_nouveaux() # On fait pousser des nouveaux arbres
         self.grille = nouvelle_grille
+
+    def arbres_nouveaux(self):
+        # p permet de contrôler la vitesse de la pousse des arbres et donc la fréquence et l’intensité des feux de forêt
+        p = int(input("Entrez le nombre d'arbres à placer"))
+        nouvelles_positions = self.placer_au_hasard('A', p)
+        for i, j in nouvelles_positions:
+            print("Arbre : ", j, ",", i, " a poussé")
+    
