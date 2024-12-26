@@ -51,10 +51,20 @@ class Grille:
         self.arbres_nouveaux() # On fait pousser des nouveaux arbres
         self.grille = nouvelle_grille
 
+    def pousser_au_hasard(self, symbole, quantite):
+        positions_vides = [(i, j) for i in range(self.taille) for j in range(self.taille) if self.grille[i][j] == '*']
+        nouvelles_positions = []
+        for _ in range(quantite):
+            if positions_vides:
+                i, j = random.choice(positions_vides)
+                self.grille[i][j] = symbole
+                positions_vides.remove((i, j))
+                nouvelles_positions.append((i, j))
+        return nouvelles_positions
+    
     def arbres_nouveaux(self):
         # p permet de contrôler la vitesse de la pousse des arbres et donc la fréquence et l’intensité des feux de forêt
-        p = int(input("Entrez le nombre d'arbres à placer"))
-        nouvelles_positions = self.placer_au_hasard('A', p)
+        p = int(input("\n Entrez le nombre d'arbres à placer : "))
+        nouvelles_positions = self.pousser_au_hasard('A', p)
         for i, j in nouvelles_positions:
             print("Arbre : ", j, ",", i, " a poussé")
-    
