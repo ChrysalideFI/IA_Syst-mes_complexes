@@ -4,6 +4,7 @@ from grille import Grille
 
 class Main:
     def __init__(self):
+
         self.taille = 10  # Taille de la grille
         self.prob = float(input('Entrez la probabilité de pousse dun arbre (entre 0 et 1) : '))
         self.grille = Grille(self.taille, self.prob)
@@ -15,12 +16,12 @@ class Main:
         self.grille.placer_au_hasard('S', 10)  # Place 10 survivants
         self.grille.placer_au_hasard('B', 1)   # Place 1 base
         print("Grille initiale:")
-        self.grille.afficher()
-
+        self.grille.afficher_en_place()
+        
         for t in range(5):  # Simuler 5 tours
             print(f"\nTour {t + 1}:")
             self.grille.mise_a_jour()
-            self.grille.afficher()
+            self.grille.afficher_en_place()
 
 
 if __name__ == "__main__":
