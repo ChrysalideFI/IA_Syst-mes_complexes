@@ -2,6 +2,7 @@ from grille import Grille
 from arbre import Arbre
 from feu import Feu
 from robot import Robot
+from base import Base
 
 
 class Main:
@@ -14,11 +15,12 @@ class Main:
     def demarrer(self):
         self.grille.placer_au_hasard(Arbre, 20)  # Placer 20 arbres
         self.grille.placer_au_hasard(Feu, 5)  # Placer 5 feux
-        self.grille.placer_au_hasard(Robot, 1)  # Placer 1 robot
+        self.grille.placer_au_hasard(Robot, 2)  # Placer 1 robot
+        self.grille.placer_au_hasard(Base, 1)  # Placer 1 base
         print("Grille initiale:")
         self.grille.afficher_en_place()
 
-        for t in range(30):  # Simuler 5 tours
+        for t in range(1000):  # Simuler 5 tours
             print(f"\nTour {t + 1}:")
             self.grille.mise_a_jour()
             self.grille.afficher_en_place()
