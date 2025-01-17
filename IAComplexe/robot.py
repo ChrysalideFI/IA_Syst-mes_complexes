@@ -7,7 +7,13 @@ class Robot:
     def __init__(self):
         self.symbole = Color.CYAN + 'R' + Color.END
         self.eau_max = 3  # Quantité d'eau maximale
-        self.eau_actuelle = self.eau_max
+        self.eau_actuelle = 0
+        self.carte_feux = None  # Carte des feux reçue depuis la base
+
+    def recevoir_carte(self, carte_feux):
+        """Reçoit la carte des feux de la base."""
+        self.carte_feux = carte_feux
+        print("Carte des feux mise à jour pour le robot.")
 
     def se_deplacer(self, grille, position_actuelle):
         directions = [
@@ -55,7 +61,7 @@ class Robot:
         self.eau_actuelle = self.eau_max
         
     def chercher_chemin(self, depart, objectif, taille, grille):
-        """Trouve un chemin du point de départ au point objectif en évitant les obstacles."""
+        """Trouve un chemin du point de départ au point objectif en évitant les obstacles. (A*)"""
         def heuristique(a, b):
             # Distance de Manhattan
             return abs(a[0] - b[0]) + abs(a[1] - b[1])
@@ -98,3 +104,21 @@ class Robot:
         chemin.reverse()
 
         return chemin
+    
+    def choisir_cible(self, position, feux_attribues):
+        """Choisit une cible parmi les feux disponibles, en évitant ceux déjà attribués."""
+        x, y = position #position du robot
+        cibles_potentielles = [
+            (i, j) for i, ligne in enumerate(self.carte_feux)
+            for j, feu in enumerate(ligne) if feu is not None and (i, j) not in feux_attribues
+        ]
+
+        if not cibles_potentielles:
+            return None  # Aucun feu disponible
+
+        # Trouver la cible la plus proche
+        cible = min(
+            cibles_potentielles,
+            key=lambda coord: abs(coord[0] - x) + abs(coord[1] - y)  # Distance de Manhattan
+        )
+        return cible
