@@ -3,6 +3,7 @@ from arbre import Arbre
 from feu import Feu
 from robot import Robot
 from base import Base
+from survivant import Survivant
 
 
 class Main:
@@ -17,6 +18,7 @@ class Main:
         self.grille.placer_au_hasard(Feu, 5)  # Placer 5 feux
         self.grille.placer_au_hasard(Robot, 2)  # Placer 1 robot
         self.grille.placer_au_hasard(Base, 1)  # Placer 1 base
+        self.grille.placer_au_hasard(Survivant, 5) # Placer 5 survivants
         print("Grille initiale:")
         self.grille.afficher_en_place()
 
