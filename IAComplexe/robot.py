@@ -8,6 +8,7 @@ class Robot:
         self.symbole = Color.CYAN + 'R' + Color.END
         self.eau_max = 3  # Quantité d'eau maximale
         self.eau_actuelle = 0
+        self.survivant = None  # Survivant que le robot transporte
         self.carte_feux = None  # Carte des feux reçue depuis la base
 
     def recevoir_carte(self, carte_feux):
@@ -15,6 +16,17 @@ class Robot:
         self.carte_feux = carte_feux
         print("Carte des feux mise à jour pour le robot.")
 
+    def sauver_survivant(self, grille, position_actuelle):
+        """Sauve un survivant et le ramène à la base."""
+        x, y = position_actuelle
+        if grille[x][y] == 'S':  # Vérifie s'il y a un survivant
+            if self.eau_actuelle > 0:
+                self.survivant = (x, y)
+                grille[x][y] = '*'  # Enleve le survivant de la grille
+                print(f"Survivant trouvé à {position_actuelle} et pris en charge par le robot.")
+                return True
+        return False
+    
     def se_deplacer(self, grille, position_actuelle):
         directions = [
             (-1, 0), (1, 0), (0, -1), (0, 1)  # Haut, Bas, Gauche, Droite
@@ -32,7 +44,37 @@ class Robot:
 
         print("Aucune position valide, le robot reste en place.")
         return x, y  # Si aucun mouvement valide, rester en place
+    
+    def sauver_survivant(self, grille, position_actuelle):
+        """Le robot agit en fonction de sa situation."""
+        if self.survivant:
+            # Retourner à la base avec le survivant
+            base_x, base_y = self.base_position
+            if position_actuelle == (base_x, base_y):
+                print("Survivant déposé à la base.")
+                self.survivant = None
+            else:
+                return self.se_deplacer_vers_base(grille, position_actuelle)
+        else:
+            # Sauver un survivant si possible
+            if self.sauver_survivant(grille, position_actuelle):
+                return self.se_deplacer_vers_base(grille, position_actuelle)
+            else:
+                return self.se_deplacer(grille, position_actuelle)
 
+    def se_deplacer_vers_base(self, grille, position_actuelle):
+        """Se déplacer vers la base."""
+        base_x, base_y = self.base_position
+        x, y = position_actuelle
+        if x < base_x:
+            return x + 1, y
+        elif x > base_x:
+                 return x - 1, y
+        elif y < base_y:
+            return x, y + 1
+        elif y > base_y:
+            return x, y - 1
+        return x, y  # Rester en place si déjà à la base
 
     def eteindre_feu(self, grille, position_actuelle):
         if self.eau_actuelle <= 0:
