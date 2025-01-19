@@ -9,12 +9,15 @@ class Robot:
         self.eau_max = 3  # Quantité d'eau maximale
         self.eau_actuelle = 0
         self.survivant = None  # Survivant que le robot transporte
+        # Distinction des cartes feux et survivants pour plus de modularité
         self.carte_feux = None  # Carte des feux reçue depuis la base
+        self.carte_survivants = None  # Carte des survivants reçue depuis la base
 
-    def recevoir_carte(self, carte_feux):
+    def recevoir_carte(self, carte_feux, carte_survivants):
         """Reçoit la carte des feux de la base."""
         self.carte_feux = carte_feux
-        print("Carte des feux mise à jour pour le robot.")
+        self.carte_survivants = carte_survivants
+        print("Carte des feux et celle des survivants mises à jour pour le robot.")
 
     def sauver_survivant(self, grille, position_actuelle):
         """Sauve un survivant et le ramène à la base."""
@@ -45,7 +48,7 @@ class Robot:
         print("Aucune position valide, le robot reste en place.")
         return x, y  # Si aucun mouvement valide, rester en place
     
-    def sauver_survivant(self, grille, position_actuelle):
+    def agir(self, grille, position_actuelle):
         """Le robot agit en fonction de sa situation."""
         if self.survivant:
             # Retourner à la base avec le survivant

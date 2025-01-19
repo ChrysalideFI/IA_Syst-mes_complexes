@@ -5,6 +5,7 @@ from arbre import Arbre
 from feu import Feu
 from robot import Robot
 from base import Base
+from survivant import Survivant
 
 class Grille:
     def __init__(self, taille, prob):
@@ -17,7 +18,7 @@ class Grille:
         #sys.stdout.write("\033[H\033[J")
         for ligne in self.grille:
             sys.stdout.write(' '.join(
-                [cell.symbole if isinstance(cell, (Arbre, Feu, Robot, Base)) else '*' for cell in ligne]
+                [cell.symbole if isinstance(cell, (Arbre, Feu, Robot, Base, Survivant)) else '*' for cell in ligne]
             ) + "\n")
         sys.stdout.flush()
 
@@ -28,6 +29,9 @@ class Grille:
         if objet == Robot:
             if not hasattr(self, "robot_positions"):
                 self.robot_positions = []  # Initialiser la liste des positions des robots
+        elif objet == Survivant:
+            if not hasattr(self, "survivant_positions"):
+                self.survivant_positions = []  # Initialiser la liste des positions des survivants
             
         for _ in range(quantite):
             if not places_vides:
@@ -36,8 +40,10 @@ class Grille:
             i, j = random.choice(places_vides)
             if objet == Robot:
                 self.robot_positions.append((i, j))  # Ajouter la position du robot
-            if objet == Base:  # Vérification directe de la classe
+            elif objet == Base:  # Vérification directe de la classe
                 self.base_position = (i, j)  # Sauvegarde la position de la base
+            elif objet == Survivant:
+                self.survivant_positions.append((i, j))  # Ajouter la position du survivant
             self.grille[i][j] = objet()  # Place une instance de la classe
            
             places_vides.remove((i, j))
@@ -91,6 +97,9 @@ class Grille:
             elif isinstance(self.grille[i][j], Feu):
                 # Les feux restent des feux
                 nouvelle_grille[i][j] = Feu()
+            elif isinstance(self.grille[i][j], Survivant):
+                # Les survivants restent des survivants
+                nouvelle_grille[i][j] = Survivant()
             elif self.grille[i][j] == '*' and random.random() < self.prob:
                 # Une case vide a une probabilité de devenir un arbre
                 nouvelle_grille[i][j] = Arbre()
