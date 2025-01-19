@@ -7,7 +7,7 @@ class Robot:
     def __init__(self):
         self.symbole = Color.CYAN + 'R' + Color.END
         self.eau_max = 3  # Quantité d'eau maximale
-        self.eau_actuelle = 0
+        self.eau_actuelle = 3
         self.survivant = None  # Survivant que le robot transporte
         # Distinction des cartes feux et survivants pour plus de modularité
         self.carte_feux = None  # Carte des feux reçue depuis la base
@@ -17,7 +17,7 @@ class Robot:
         """Reçoit la carte des feux de la base."""
         self.carte_feux = carte_feux
         self.carte_survivants = carte_survivants
-        print("Carte des feux et celle des survivants mises à jour pour le robot.")
+        # print("Carte des feux et celle des survivants mises à jour pour le robot.")
 
     def sauver_survivant(self, grille, position_actuelle):
         """Sauve un survivant et le ramène à la base."""
@@ -150,20 +150,54 @@ class Robot:
 
         return chemin
     
-    def choisir_cible(self, position, feux_attribues):
-        """Choisit une cible parmi les feux disponibles, en évitant ceux déjà attribués."""
-        x, y = position #position du robot
-        cibles_potentielles = [
+    # def choisir_cible(self, position, feux_attribues):
+    #     """Choisit une cible parmi les feux disponibles, en évitant ceux déjà attribués."""
+    #     x, y = position #position du robot
+    #     cibles_potentielles = [
+    #         (i, j) for i, ligne in enumerate(self.carte_feux)
+    #         for j, feu in enumerate(ligne) if feu is not None and (i, j) not in feux_attribues
+    #     ]
+
+    #     if not cibles_potentielles:
+    #         return None  # Aucun feu disponible
+
+    #     # Trouver la cible la plus proche
+    #     cible = min(
+    #         cibles_potentielles,
+    #         key=lambda coord: abs(coord[0] - x) + abs(coord[1] - y)  # Distance de Manhattan
+    #     )
+    #     return cible
+
+    def choisir_cible(self, position, feux_attribues, survivants_attribues):
+        """Choisit une cible parmi les survivants disponibles en priorité, sinon parmi les feux disponibles."""
+        x, y = position  # position du robot
+
+        # Chercher les survivants disponibles
+        cibles_potentielles_survivants = [
+            (i, j) for i, ligne in enumerate(self.carte_survivants)
+            for j, survivant in enumerate(ligne) if survivant is not None and (i, j) not in survivants_attribues
+        ]
+
+        if cibles_potentielles_survivants:
+            # Trouver le survivant le plus proche
+            cible_survivant = min(
+                cibles_potentielles_survivants,
+                key=lambda coord: abs(coord[0] - x) + abs(coord[1] - y)  # Distance de Manhattan
+            )
+            return cible_survivant
+
+        # Chercher les feux disponibles
+        cibles_potentielles_feux = [
             (i, j) for i, ligne in enumerate(self.carte_feux)
             for j, feu in enumerate(ligne) if feu is not None and (i, j) not in feux_attribues
         ]
 
-        if not cibles_potentielles:
+        if not cibles_potentielles_feux:
             return None  # Aucun feu disponible
 
-        # Trouver la cible la plus proche
-        cible = min(
-            cibles_potentielles,
+        # Trouver le feu le plus proche
+        cible_feu = min(
+            cibles_potentielles_feux,
             key=lambda coord: abs(coord[0] - x) + abs(coord[1] - y)  # Distance de Manhattan
         )
-        return cible
+        return cible_feu

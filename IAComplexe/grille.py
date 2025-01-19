@@ -13,6 +13,7 @@ class Grille:
         self.grille = [['*' for _ in range(taille)] for _ in range(taille)]
         self.prob = prob
         self.robot_position = None  # Position actuelle du robot
+        self.carte_survivants = [[None for _ in range(taille)] for _ in range(taille)]  # Initialisation de carte_survivants
 
     def afficher_en_place(self):
         #sys.stdout.write("\033[H\033[J")
@@ -85,6 +86,7 @@ class Grille:
         
          # Ensemble pour suivre les feux déjà attribués
         feux_attribues = set()
+        survivants_attribues = set()  
         
         # objectif ou le robot doit aller (soit la base pour se recharger en eau, soit un feu a eteindre)
         objectif = None
@@ -181,43 +183,86 @@ class Grille:
                 if feux_eteints:
                     print(f"Robot {index + 1} a éteint des feux voisins.")
 
-                # Le robot choisit une cible
-                cible = robot.choisir_cible(position, feux_attribues)
+        #         # Le robot choisit une cible
+        #         cible = robot.choisir_cible(position, feux_attribues)
 
-                if cible:
-                    feux_attribues.add(cible)  # Marquer la cible comme attribuée
-                    cible_x, cible_y = cible
-                    objectif = None
-                    for dx, dy in directions:
-                        nx, ny = cible_x + dx, cible_y + dy
-                        if 0 <= nx < self.taille and 0 <= ny < self.taille and nouvelle_grille[nx][ny] == '*':
-                            objectif = (nx, ny)
-                            break
+        #         if cible:
+        #             feux_attribues.add(cible)  # Marquer la cible comme attribuée
+        #             cible_x, cible_y = cible
+        #             objectif = None
+        #             for dx, dy in directions:
+        #                 nx, ny = cible_x + dx, cible_y + dy
+        #                 if 0 <= nx < self.taille and 0 <= ny < self.taille and nouvelle_grille[nx][ny] == '*':
+        #                     objectif = (nx, ny)
+        #                     break
 
-                if objectif is None:
-                    print(f"Aucune case adjacente disponible pour le Robot {index + 1} autour de la cible {cible}.")
-                    continue  # Passer au robot suivant
+        #         if objectif is None:
+        #             print(f"Aucune case adjacente disponible pour le Robot {index + 1} autour de la cible {cible}.")
+        #             continue  # Passer au robot suivant
 
-                # Trouver le chemin vers l'objectif
-                chemin = robot.chercher_chemin((x, y), objectif, self.taille, nouvelle_grille)
-                if len(chemin) > 1:  # Déplacement progressif
-                    next_position = chemin[1]
-                    nx, ny = next_position
-                    nouvelle_grille[x][y] = '*'  # Laisser la position actuelle vide
-                    nouvelle_grille[nx][ny] = robot  # Déplacer le robot
-                    self.robot_positions[index] = (nx, ny)
-                    print(f"Robot {index + 1} se dirige vers la cible en {cible}.")
-                else:
-                    # Déplacement aléatoire si aucune cible n'est disponible
-                    nouvelle_position = robot.se_deplacer(nouvelle_grille, position)
-                    nx, ny = nouvelle_position
+        #         # Trouver le chemin vers l'objectif
+        #         chemin = robot.chercher_chemin((x, y), objectif, self.taille, nouvelle_grille)
+        #         if len(chemin) > 1:  # Déplacement progressif
+        #             next_position = chemin[1]
+        #             nx, ny = next_position
+        #             nouvelle_grille[x][y] = '*'  # Laisser la position actuelle vide
+        #             nouvelle_grille[nx][ny] = robot  # Déplacer le robot
+        #             self.robot_positions[index] = (nx, ny)
+        #             print(f"Robot {index + 1} se dirige vers la cible en {cible}.")
+        #         else:
+        #             # Déplacement aléatoire si aucune cible n'est disponible
+        #             nouvelle_position = robot.se_deplacer(nouvelle_grille, position)
+        #             nx, ny = nouvelle_position
 
-                    if nouvelle_grille[nx][ny] == '*':  # Vérifiez que la case est libre
-                        nouvelle_grille[x][y] = '*'  # Laisser la position actuelle vide
-                        nouvelle_grille[nx][ny] = robot  # Déplacer le robot
-                        self.robot_positions[index] = nouvelle_position
-                        print(f"Robot {index + 1} se déplace aléatoirement.")
+        #             if nouvelle_grille[nx][ny] == '*':  # Vérifiez que la case est libre
+        #                 nouvelle_grille[x][y] = '*'  # Laisser la position actuelle vide
+        #                 nouvelle_grille[nx][ny] = robot  # Déplacer le robot
+        #                 self.robot_positions[index] = nouvelle_position
+        #                 print(f"Robot {index + 1} se déplace aléatoirement.")
+
+        # # Remplacer self.grille par la version mise à jour
+        # self.grille = nouvelle_grille
+
+                    # Le robot choisit une cible
+                    cible = robot.choisir_cible(position, feux_attribues, survivants_attribues)
+
+                    if cible:
+                        cible_x, cible_y = cible
+                        if self.carte_survivants[cible_x][cible_y] is not None:
+                            survivants_attribues.add(cible)  # Marquer le survivant comme attribué
+                        else:
+                            feux_attribues.add(cible)  # Marquer le feu comme attribué
+
+                        objectif = None
+                        for dx, dy in directions:
+                            nx, ny = cible_x + dx, cible_y + dy
+                            if 0 <= nx < self.taille and 0 <= ny < self.taille and nouvelle_grille[nx][ny] == '*':
+                                objectif = (nx, ny)
+                                break
+
+                        if objectif is None:
+                            print(f"Aucune case adjacente disponible pour le Robot {index + 1} autour de la cible {cible}.")
+                            continue  # Passer au robot suivant
+
+                        # Trouver le chemin vers l'objectif
+                        chemin = robot.chercher_chemin((x, y), objectif, self.taille, nouvelle_grille)
+                        if len(chemin) > 1:  # Déplacement progressif
+                            next_position = chemin[1]
+                            nx, ny = next_position
+                            nouvelle_grille[x][y] = '*'  # Laisser la position actuelle vide
+                            nouvelle_grille[nx][ny] = robot  # Déplacer le robot
+                            self.robot_positions[index] = (nx, ny)
+                            print(f"Robot {index + 1} se dirige vers la cible en {cible}.")
+                        else:
+                            # Déplacement aléatoire si aucune cible n'est disponible
+                            nouvelle_position = robot.se_deplacer(nouvelle_grille, position)
+                            nx, ny = nouvelle_position
+
+                            if nouvelle_grille[nx][ny] == '*':  # Vérifiez que la case est libre
+                                nouvelle_grille[x][y] = '*'  # Laisser la position actuelle vide
+                                nouvelle_grille[nx][ny] = robot  # Déplacer le robot
+                                self.robot_positions[index] = nouvelle_position
+                                print(f"Robot {index + 1} se déplace aléatoirement.")
 
         # Remplacer self.grille par la version mise à jour
-        self.grille = nouvelle_grille
-
+        self.grille = nouvelle_grille  # Remplacer la grille actuelle par la nouvelle grille
