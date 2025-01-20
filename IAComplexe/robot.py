@@ -2,34 +2,23 @@ import random
 from feu import Feu
 from color import Color
 from queue import PriorityQueue
+from collections import deque
 
 class Robot:
     def __init__(self):
         self.symbole = Color.CYAN + 'R' + Color.END
         self.eau_max = 3  # Quantité d'eau maximale
-        self.eau_actuelle = 3
-        self.survivant = None  # Survivant que le robot transporte
-        # Distinction des cartes feux et survivants pour plus de modularité
+        self.eau_actuelle = 0
         self.carte_feux = None  # Carte des feux reçue depuis la base
-        self.carte_survivants = None  # Carte des survivants reçue depuis la base
+        self.survivant_trouve = False
+        self.exploration_direction = None  # Direction actuelle d’exploration
+        self.cible_non_explore = None
 
-    def recevoir_carte(self, carte_feux, carte_survivants):
+    def recevoir_carte(self, carte_feux):
         """Reçoit la carte des feux de la base."""
         self.carte_feux = carte_feux
-        self.carte_survivants = carte_survivants
-        # print("Carte des feux et celle des survivants mises à jour pour le robot.")
+        
 
-    def sauver_survivant(self, grille, position_actuelle):
-        """Sauve un survivant et le ramène à la base."""
-        x, y = position_actuelle
-        if grille[x][y] == 'S':  # Vérifie s'il y a un survivant
-            if self.eau_actuelle > 0:
-                self.survivant = (x, y)
-                grille[x][y] = '*'  # Enleve le survivant de la grille
-                print(f"Survivant trouvé à {position_actuelle} et pris en charge par le robot.")
-                return True
-        return False
-    
     def se_deplacer(self, grille, position_actuelle):
         directions = [
             (-1, 0), (1, 0), (0, -1), (0, 1)  # Haut, Bas, Gauche, Droite
@@ -47,41 +36,10 @@ class Robot:
 
         print("Aucune position valide, le robot reste en place.")
         return x, y  # Si aucun mouvement valide, rester en place
-    
-    def agir(self, grille, position_actuelle):
-        """Le robot agit en fonction de sa situation."""
-        if self.survivant:
-            # Retourner à la base avec le survivant
-            base_x, base_y = self.base_position
-            if position_actuelle == (base_x, base_y):
-                print("Survivant déposé à la base.")
-                self.survivant = None
-            else:
-                return self.se_deplacer_vers_base(grille, position_actuelle)
-        else:
-            # Sauver un survivant si possible
-            if self.sauver_survivant(grille, position_actuelle):
-                return self.se_deplacer_vers_base(grille, position_actuelle)
-            else:
-                return self.se_deplacer(grille, position_actuelle)
 
-    def se_deplacer_vers_base(self, grille, position_actuelle):
-        """Se déplacer vers la base."""
-        base_x, base_y = self.base_position
-        x, y = position_actuelle
-        if x < base_x:
-            return x + 1, y
-        elif x > base_x:
-                 return x - 1, y
-        elif y < base_y:
-            return x, y + 1
-        elif y > base_y:
-            return x, y - 1
-        return x, y  # Rester en place si déjà à la base
 
     def eteindre_feu(self, grille, position_actuelle):
         if self.eau_actuelle <= 0:
-            print("Le robot n'a plus d'eau et doit se recharger.")
             return False
 
         directions = [
@@ -96,13 +54,13 @@ class Robot:
                 # Remplacer l'objet Feu par une case vide
                 grille[nx][ny] = '*'
                 self.eau_actuelle -= 1
-                print(f"Feu éteint à la position ({nx}, {ny}), eau restante : {self.eau_actuelle}")
+                
                 return True  # Feu éteint avec succès
 
         return False  # Aucun feu éteint
     
     def recharger(self):
-        print("Le robot se recharge en eau.")
+       
         self.eau_actuelle = self.eau_max
         
     def chercher_chemin(self, depart, objectif, taille, grille):
@@ -140,6 +98,10 @@ class Robot:
                     frontier.put((priority, next))
                     came_from[next] = current
 
+            # Vérifier si l'objectif est atteignable
+        if objectif not in came_from:
+            return []  # Retourner une liste vide si aucun chemin n'existe
+        
         # Reconstruire le chemin
         chemin = []
         current = objectif
@@ -150,54 +112,75 @@ class Robot:
 
         return chemin
     
-    # def choisir_cible(self, position, feux_attribues):
-    #     """Choisit une cible parmi les feux disponibles, en évitant ceux déjà attribués."""
-    #     x, y = position #position du robot
-    #     cibles_potentielles = [
-    #         (i, j) for i, ligne in enumerate(self.carte_feux)
-    #         for j, feu in enumerate(ligne) if feu is not None and (i, j) not in feux_attribues
-    #     ]
-
-    #     if not cibles_potentielles:
-    #         return None  # Aucun feu disponible
-
-    #     # Trouver la cible la plus proche
-    #     cible = min(
-    #         cibles_potentielles,
-    #         key=lambda coord: abs(coord[0] - x) + abs(coord[1] - y)  # Distance de Manhattan
-    #     )
-    #     return cible
-
-    def choisir_cible(self, position, feux_attribues, survivants_attribues):
-        """Choisit une cible parmi les survivants disponibles en priorité, sinon parmi les feux disponibles."""
-        x, y = position  # position du robot
-
-        # Chercher les survivants disponibles
-        cibles_potentielles_survivants = [
-            (i, j) for i, ligne in enumerate(self.carte_survivants)
-            for j, survivant in enumerate(ligne) if survivant is not None and (i, j) not in survivants_attribues
-        ]
-
-        if cibles_potentielles_survivants:
-            # Trouver le survivant le plus proche
-            cible_survivant = min(
-                cibles_potentielles_survivants,
-                key=lambda coord: abs(coord[0] - x) + abs(coord[1] - y)  # Distance de Manhattan
-            )
-            return cible_survivant
-
-        # Chercher les feux disponibles
-        cibles_potentielles_feux = [
+    def choisir_cible(self, position, feux_attribues):
+        """Choisit une cible parmi les feux disponibles, en évitant ceux déjà attribués."""
+        x, y = position #position du robot
+        cibles_potentielles = [
             (i, j) for i, ligne in enumerate(self.carte_feux)
             for j, feu in enumerate(ligne) if feu is not None and (i, j) not in feux_attribues
         ]
 
-        if not cibles_potentielles_feux:
+        if not cibles_potentielles:
             return None  # Aucun feu disponible
 
-        # Trouver le feu le plus proche
-        cible_feu = min(
-            cibles_potentielles_feux,
+        # Trouver la cible la plus proche
+        cible = min(
+            cibles_potentielles,
             key=lambda coord: abs(coord[0] - x) + abs(coord[1] - y)  # Distance de Manhattan
         )
-        return cible_feu
+        return cible
+
+    
+
+    def explorer(self, grille, position):
+        """Effectue une exploration systématique et évite les allers-retours infinis."""
+        x, y = position
+
+        # Limiter la profondeur de récursion pour éviter la boucle infinie
+        if self.exploration_direction is None:
+            self.exploration_direction = (0, 1)  # Direction initiale : droite
+
+        # Définir une fonction pour vérifier si une case est valide
+        def position_valide(nx, ny):
+            return 0 <= nx < len(grille) and 0 <= ny < len(grille[0]) and grille[nx][ny] == '*'
+
+        # Essayer différentes directions : droite, bas, gauche, haut
+        directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+        for direction in directions:
+            dx, dy = direction
+            nx, ny = x + dx, y + dy
+
+            # Si la nouvelle position est valide (case libre et dans les limites)
+            if position_valide(nx, ny):
+                self.exploration_direction = direction  # Mettre à jour la direction
+                return (nx, ny)
+
+        # Si aucune direction n'est valide (toutes les cases autour sont occupées)
+        # Le robot reste sur place, mais on doit éviter l'aller-retour constant.
+        # On va ajouter un peu plus de logique pour gérer les allers-retours
+        if self.exploration_direction == (0, 1):  # Si la direction actuelle est droite
+            self.exploration_direction = (1, 0)  # Passer à bas
+        elif self.exploration_direction == (1, 0):  # Si la direction actuelle est bas
+            self.exploration_direction = (0, -1)  # Passer à gauche
+        elif self.exploration_direction == (0, -1):  # Si la direction actuelle est gauche
+            self.exploration_direction = (-1, 0)  # Passer à haut
+        else:
+            self.exploration_direction = (0, 1)  # Réinitialiser à droite
+
+        # Recalculer la prochaine position dans la nouvelle direction
+        dx, dy = self.exploration_direction
+        nx, ny = x + dx, y + dy
+
+        # Assurez-vous que la nouvelle position est valide
+        if position_valide(nx, ny):
+            return (nx, ny)
+
+        return position  # Si aucune direction n'est valide, rester sur place
+
+
+
+
+
+
+
+
